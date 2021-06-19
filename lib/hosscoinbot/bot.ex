@@ -66,6 +66,16 @@ defmodule Hosscoinbot.TreasuryConsumer do
         txns = Operations.user_transactions(first_mentioned.id)
         logs_message = for txn <- txns, into: "", do: "From: #{txn.from_id} To: #{txn.to_id} Amount: #{txn.amount}\n"
         Api.create_message(msg.channel_id, "Transaction Log for #{first_mentioned.username}:\n\n#{logs_message}")
+      "$help" ->
+        Api.create_message(msg.channel_id, """
+          Hosscoinbot Help:
+
+          Commands:
+          $mint 1000 - Mint 1000 new $HOSS coins (minters only, sorry!)
+          $balance @UserName - Check balance for @UserName. Can omit tag to check your own balance
+          $transfer 10 @OtherUser - Transfer 10 $HOSS coins to @OtherUser
+          $log @OtherUser - Print transaction log for @OtherUser's account
+        """)
       _ ->
         :ignore
     end
