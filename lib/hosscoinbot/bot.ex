@@ -33,7 +33,8 @@ defmodule Hosscoinbot.TreasuryConsumer do
     author_id = msg.author.id
     username = msg.author.username
     mentioned = msg.mentions
-    case msg.content do
+    mentioned_without_author = Enum.filter(mentioned, fn u -> u.id != author_id end)
+    case String.downcase(msg.content) do
       "$mint " <> amount_s when author_id in @allowed_minters  ->
         case Integer.parse(String.trim(amount_s)) do
           {amount_int, ""} ->
@@ -44,9 +45,9 @@ defmodule Hosscoinbot.TreasuryConsumer do
             end
           _ -> Api.create_message(msg.channel_id, "Invalid amount. Usage: \"$mint 1000\"")
         end
-      "$transfer " <> rest when length(mentioned) == 1 ->
+      "$transfer " <> rest when length(mentioned_without_author) == 1 ->
         without_mentions = String.replace(rest, ~r/<@!\d+>/, "") |> String.trim
-        first_mentioned = hd(mentioned)
+        first_mentioned = hd(mentioned_without_author)
         with  {amount_i, ""} <- Integer.parse(without_mentions),
               {:ok, txn} <- Operations.transfer(author_id, first_mentioned.id, amount_i)
               do
