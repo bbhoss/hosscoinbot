@@ -46,7 +46,7 @@ defmodule Hosscoinbot.TreasuryConsumer do
           _ -> Api.create_message(msg.channel_id, "Invalid amount. Usage: \"$mint 1000\"")
         end
       "$transfer " <> rest when length(mentioned_without_author) == 1 ->
-        without_mentions = String.replace(rest, ~r/<@!\d+>/, "") |> String.trim
+        without_mentions = String.replace(rest, ~r/<@!?\d+>/, "") |> String.trim
         first_mentioned = hd(mentioned_without_author)
         with  {amount_i, ""} <- Integer.parse(without_mentions),
               {:ok, txn} <- Operations.transfer(author_id, first_mentioned.id, amount_i)
