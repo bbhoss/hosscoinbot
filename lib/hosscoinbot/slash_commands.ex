@@ -7,7 +7,8 @@ defmodule Hosscoinbot.SlashCommands do
   end
 
   @commands [
-    Hosscoinbot.SlashCommands.Balance
+    Hosscoinbot.SlashCommands.Balance,
+    Hosscoinbot.SlashCommands.Mint,
   ]
   @all_commands_with_names Enum.map(@commands, &({&1, &1.command[:name]}))
 
