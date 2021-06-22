@@ -17,14 +17,9 @@ defmodule Hosscoinbot.TreasuryConsumer do
   use Nostrum.Consumer
   require Logger
 
-  @allowed_minters [
-    190221514245668864
-  ]
-
   alias Nostrum.Api
   alias Nostrum.Struct.Interaction
   alias Hosscoinbot.{Operations, SlashCommands}
-  alias Hosscoinbot.Model.Minting
 
   def start_link do
     Consumer.start_link(__MODULE__)
@@ -36,58 +31,16 @@ defmodule Hosscoinbot.TreasuryConsumer do
   end
 
   def handle_event({:MESSAGE_CREATE, msg, _ws_state}) do
-    IO.inspect(msg)
-    author_id = msg.author.id
-    username = msg.author.username
-    mentioned = msg.mentions
-    mentioned_without_author = Enum.filter(mentioned, fn u -> u.id != author_id end)
     case String.downcase(msg.content) do
       "$install" ->
         case Operations.install_slash_commands(msg.guild_id) do
           :ok -> Api.create_message(msg.channel_id, "Slash commands installed!")
           {:error, msgs} -> Api.create_message(msg.channel_id, "Error installing slash commands:\n#{msgs}")
         end
-      "$mint " <> amount_s when author_id in @allowed_minters  ->
-        case Integer.parse(String.trim(amount_s)) do
-          {amount_int, ""} ->
-            case Operations.mint_coins(author_id, amount_int) do
-              {:ok, %Minting{amount: amount}} ->
-                minter_balance = Operations.balance(author_id)
-                Api.create_message(msg.channel_id, "Minted #{amount} $HOSS coins. #{username} balance now: #{minter_balance}")
-            end
-          _ -> Api.create_message(msg.channel_id, "Invalid amount. Usage: \"$mint 1000\"")
-        end
-      "$transfer " <> rest when length(mentioned_without_author) == 1 ->
-        without_mentions = String.replace(rest, ~r/<@!?\d+>/, "") |> String.trim
-        first_mentioned = hd(mentioned_without_author)
-        with  {amount_i, ""} <- Integer.parse(without_mentions),
-              {:ok, txn} <- Operations.transfer(author_id, first_mentioned.id, amount_i)
-              do
-                Api.create_message(msg.channel_id, "Transferred #{txn.amount} $HOSS coins from #{username} to #{first_mentioned.username}")
-              else
-                {:error, err_msg} -> Api.create_message(msg.channel_id, "Transfer failed: #{err_msg}")
-                _ -> Api.create_message(msg.channel_id, "Transfer failed: Unknown")
-              end
-      "$balance" ->
-        author_balance = Operations.balance(author_id)
-        Api.create_message(msg.channel_id, "Your balance: #{author_balance} $HOSS")
-      "$balance" <> _rest when length(mentioned) == 1 ->
-        mentioned_balance = Operations.balance(hd(mentioned).id)
-        Api.create_message(msg.channel_id, "#{hd(mentioned).username} balance: #{mentioned_balance} $HOSS")
-      "$log"  <> _rest when length(mentioned) == 1 ->
-        first_mentioned = hd(mentioned)
-        txns = Operations.user_transactions(first_mentioned.id)
-        logs_message = for txn <- txns, into: "", do: "From: #{txn.from_id} To: #{txn.to_id} Amount: #{txn.amount}\n"
-        Api.create_message(msg.channel_id, "Transaction Log for #{first_mentioned.username}:\n\n#{logs_message}")
       "$help" ->
         Api.create_message(msg.channel_id, """
-          Hosscoinbot Help:
-
-          Commands:
-          $mint 1000 - Mint 1000 new $HOSS coins (minters only, sorry!)
-          $balance @UserName - Check balance for @UserName. Can omit tag to check your own balance
-          $transfer 10 @OtherUser - Transfer 10 $HOSS coins to @OtherUser
-          $log @OtherUser - Print transaction log for @OtherUser's account
+          Hosscoinbot now uses Slash Commands for input. To install the commands send `$install`,
+          then hit / in the chat box to see the various commands.
         """)
       _ ->
         :ignore
