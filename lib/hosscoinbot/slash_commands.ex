@@ -9,6 +9,7 @@ defmodule Hosscoinbot.SlashCommands do
   @commands [
     Hosscoinbot.SlashCommands.Balance,
     Hosscoinbot.SlashCommands.Mint,
+    Hosscoinbot.SlashCommands.Transfer,
   ]
   @all_commands_with_names Enum.map(@commands, &({&1, &1.command[:name]}))
 
