@@ -2,7 +2,7 @@ defmodule Hosscoinbot.Operations do
   require Logger
   import Ecto.Query
   alias Ecto.Multi
-  alias Hosscoinbot.Repo
+  alias Hosscoinbot.{Repo, SlashCommands}
   alias Hosscoinbot.Model.{Minting, Transaction}
 
   @spec mint_coins(Integer.t, Integer.t) :: {:ok, Minting.t} | {:error, String.t}
@@ -48,5 +48,21 @@ defmodule Hosscoinbot.Operations do
   @spec user_transactions(Integer.t) :: [Transaction.t]
   def user_transactions(user_id) do
     Repo.all(from t in Transaction, where: t.to_id == ^user_id or t.from_id == ^user_id)
+  end
+
+  @spec install_slash_commands(Integer.t) :: :ok | {:error, String.t}
+  def install_slash_commands(guild_id) do
+    installs = for cmd <- SlashCommands.all_commands(), do: SlashCommands.install(guild_id, cmd)
+    failures = Enum.filter(installs, &(elem(&1, 0) == :error))
+
+    case failures do
+      [] -> :ok
+      errors_list ->
+        joined_error_messages =
+          errors_list
+          |> Enum.map(&(elem(&1, 1)))
+          |> Enum.join("\n")
+      {:error, joined_error_messages}
+    end
   end
 end

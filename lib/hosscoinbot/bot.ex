@@ -15,17 +15,24 @@ end
 
 defmodule Hosscoinbot.TreasuryConsumer do
   use Nostrum.Consumer
+  require Logger
 
   @allowed_minters [
     190221514245668864
   ]
 
   alias Nostrum.Api
-  alias Hosscoinbot.Operations
+  alias Nostrum.Struct.Interaction
+  alias Hosscoinbot.{Operations, SlashCommands}
   alias Hosscoinbot.Model.Minting
 
   def start_link do
     Consumer.start_link(__MODULE__)
+  end
+
+  def handle_event({:INTERACTION_CREATE, %Interaction{} = interaction, _ws_state}) do
+    Logger.debug("Interaction created event:\n#{inspect(interaction)}")
+    SlashCommands.handle_interaction(interaction)
   end
 
   def handle_event({:MESSAGE_CREATE, msg, _ws_state}) do
@@ -35,6 +42,11 @@ defmodule Hosscoinbot.TreasuryConsumer do
     mentioned = msg.mentions
     mentioned_without_author = Enum.filter(mentioned, fn u -> u.id != author_id end)
     case String.downcase(msg.content) do
+      "$install" ->
+        case Operations.install_slash_commands(msg.guild_id) do
+          :ok -> Api.create_message(msg.channel_id, "Slash commands installed!")
+          {:error, msgs} -> Api.create_message(msg.channel_id, "Error installing slash commands:\n#{msgs}")
+        end
       "$mint " <> amount_s when author_id in @allowed_minters  ->
         case Integer.parse(String.trim(amount_s)) do
           {amount_int, ""} ->
