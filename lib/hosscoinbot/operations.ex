@@ -50,6 +50,19 @@ defmodule Hosscoinbot.Operations do
     Repo.all(from t in Transaction, where: t.to_id == ^user_id or t.from_id == ^user_id)
   end
 
+  @spec hoarders(non_neg_integer()) :: [{Integer.t, Integer.t}]
+  def hoarders(limit) do
+    receives = from t in Transaction, select: %{user_id: t.to_id, amount: t.amount}
+    absolute_txns = from t in Transaction, select: %{user_id: t.from_id, amount: -1*t.amount}, union_all: ^receives
+
+    totals = from t in subquery(absolute_txns),
+      select: [t.user_id, sum(t.amount)],
+      group_by: t.user_id,
+      limit: ^limit,
+      order_by: [desc: sum(t.amount)]
+    Repo.all(totals)
+  end
+
   @spec install_slash_commands(Integer.t) :: :ok | {:error, String.t}
   def install_slash_commands(guild_id) do
     installs = for cmd <- SlashCommands.all_commands(), do: SlashCommands.install(guild_id, cmd)
