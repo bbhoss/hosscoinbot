@@ -1,11 +1,12 @@
 import Config
 
 config :nostrum,
-  token: "snip",
+  token: "fill this in",
   num_shards: :auto
 
 config :hosscoinbot,
-  ecto_repos: [Hosscoinbot.Repo]
+  ecto_repos: [Hosscoinbot.Repo],
+  play_channel_id: "fill this in with the channel number"
 
 config :hosscoinbot, Hosscoinbot.Repo,
   database: "db/db.sqlite3"
