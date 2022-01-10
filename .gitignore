@@ -27,3 +27,4 @@ hosscoinbot-*.tar
 
 /db/
 /config/config.exs
+/.direnv/
