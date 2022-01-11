@@ -16,12 +16,10 @@
         inherit (nixpkgs.lib) optional;
         pkgs = import nixpkgs { inherit system; };
         erlPkgs = pkgs.beam.packagesWith pkgs.beam.interpreters.erlang;
-        src = builtins.fetchGit {
-          url = "ssh://git@github.com/bbhoss/hosscoinbot";
-          rev = "0ac87ae9c9c5fe676b92d77164f1167b89047f48";
-        };
+
         pname = "hosscoinbot";
-        version = "0.0.1";
+        version = self.rev;
+        src = ./.;
 
         elixir = erlPkgs.elixir;
         locales = pkgs.glibcLocales.override {

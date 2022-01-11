@@ -9,10 +9,10 @@ defmodule Hosscoinbot do
   ## Examples
 
       iex> Hosscoinbot.hello()
-      :world
+      "Nix testing"
 
   """
   def hello do
-    :world
+    "Nix testing"
   end
 end
