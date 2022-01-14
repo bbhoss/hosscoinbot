@@ -30,11 +30,15 @@
           inherit src version;
           sha256 = "2hrfG49grSJJStvSIRS/ZvIRyz2GfokObqsEz8Arg7Q=";
         };
+        runtimeAppDeps = [
+          locales
+          pkgs.ffmpeg
+        ];
         hosscoinbotRelease = erlPkgs.mixRelease {
           inherit src pname version mixFodDeps;
 
-          depsBuildTarget = [
-            locales
+          nativeBuildInputs = [
+            runtimeAppDeps
           ];
         };
       in
@@ -45,6 +49,7 @@
           tag = version;
 
           contents = [
+            runtimeAppDeps
             hosscoinbotRelease
             pkgs.busybox # for debugging
           ];
@@ -65,6 +70,7 @@
 
         devShell = pkgs.mkShell {
           buildInputs = [
+            runtimeAppDeps
             elixir
             locales
           ];
