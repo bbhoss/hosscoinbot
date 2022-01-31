@@ -47,6 +47,10 @@ defmodule Hosscoinbot.TreasuryConsumer do
     end
   end
 
+  def handle_event({:GUILD_AVAILABLE, guild, _ws_state}) do
+    SlashCommands.init(guild)
+  end
+
   # Default event handler, if you don't include this, your consumer WILL crash if
   # you don't have a method definition for each event type.
   def handle_event(event) do

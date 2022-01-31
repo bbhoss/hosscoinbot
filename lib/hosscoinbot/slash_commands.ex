@@ -1,7 +1,23 @@
 defmodule Hosscoinbot.SlashCommands do
   require Logger
-  alias Nostrum.Struct.Interaction
+  alias Nostrum.Struct.{
+    Interaction,
+    Guild,
+  }
+
   defmodule SlashCommand do
+    defmacro __using__(_opts) do
+      quote do
+        @behaviour Hosscoinbot.SlashCommands.SlashCommand
+
+        def init(_guild) do
+          :noop
+        end
+
+        defoverridable init: 1
+      end
+    end
+    @callback init(Guild) :: any
     @callback command() :: map()
     @callback handle(Interaction.t) :: any
   end
@@ -36,5 +52,9 @@ defmodule Hosscoinbot.SlashCommands do
   def handle_interaction(interaction) do
     Logger.debug("Catch all handler for interactions caught #{inspect(interaction)}")
     :ignore
+  end
+
+  def init(guild) do
+    for command <- @commands, do: command.init(guild)
   end
 end

@@ -1,5 +1,5 @@
 defmodule Hosscoinbot.SlashCommands.Mint do
-  @behaviour Hosscoinbot.SlashCommands.SlashCommand
+  use Hosscoinbot.SlashCommands.SlashCommand
   alias Nostrum.Struct.Interaction
   alias Nostrum.Api
   alias Hosscoinbot.Operations
