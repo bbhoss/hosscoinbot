@@ -49,7 +49,8 @@ defmodule Hosscoinbot.TreasuryConsumer do
 
   # Default event handler, if you don't include this, your consumer WILL crash if
   # you don't have a method definition for each event type.
-  def handle_event(_event) do
+  def handle_event(event) do
+    Logger.debug("Received unhandled event: #{inspect(event)}")
     :noop
   end
 end

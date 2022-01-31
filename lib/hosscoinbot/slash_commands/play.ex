@@ -2,7 +2,7 @@ defmodule Hosscoinbot.SlashCommands.Play do
   @behaviour Hosscoinbot.SlashCommands.SlashCommand
   alias Nostrum.Struct.Interaction
   alias Nostrum.Api
-  alias Nostrum.Voice
+  alias Hosscoinbot.Jukebox
 
   def command() do
     %{
@@ -23,24 +23,32 @@ defmodule Hosscoinbot.SlashCommands.Play do
   def handle(interaction = %Interaction{data: %{
     options: [%{name: "url", type: 3, value: track_url}],
   }, guild_id: guild_id }) do
-    channel = Application.fetch_env!(:hosscoinbot, :play_channel_id)
-    :ok = Voice.join_channel(guild_id, channel)
-    :timer.sleep(2000) # Sleep for async join
-    Voice.stop(guild_id)
-    response = case Voice.play(guild_id, track_url, :ytdl, realtime: true) do
-      :ok -> ok_response(track_url)
+    {:ok, _pid} = Jukebox.ensure_started(guild_id)
+
+    response = case Jukebox.add_track(guild_id, track_url) do
+      {:ok, playing_or_queued} -> ok_response(track_url, playing_or_queued)
       {:error, msg} -> error_response(msg, track_url)
     end
 
     Api.create_interaction_response(interaction, response)
   end
 
-  defp ok_response(track_url) do
+  defp ok_response(track_url, :playing) do
     %{
       type: 4,
       flags: 64, # Ephemeral
       data: %{
         content: "Playing track: #{track_url}"
+      }
+    }
+  end
+
+  defp ok_response(track_url, {:queued, queue_length}) do
+    %{
+      type: 4,
+      flags: 64, # Ephemeral
+      data: %{
+        content: "Added track: #{track_url} to the queue. #{queue_length} song(s) now in the queue"
       }
     }
   end

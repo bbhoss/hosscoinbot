@@ -8,10 +8,9 @@ defmodule Hosscoinbot.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Starts a worker by calling: Hosscoinbot.Worker.start_link(arg)
-      # {Hosscoinbot.Worker, arg}
       Hosscoinbot.Bot,
-      Hosscoinbot.Repo
+      Hosscoinbot.Repo,
+      {Registry, name: Hosscoinbot.Jukebox.registry_name, keys: :unique}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
