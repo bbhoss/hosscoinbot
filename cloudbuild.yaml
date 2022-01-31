@@ -7,9 +7,6 @@ steps:
     - -c
     - |
       set -exuo pipefail
-      # Workaround https://github.com/NixOS/nix/issues/5797
-      mkdir -p /etc/ssl/certs/
-      ln -s $$NIX_SSL_CERT_FILE /etc/ssl/certs/
 
       # Install nix deps
       echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
@@ -41,3 +38,4 @@ availableSecrets:
 
 images:
 - gcr.io/$PROJECT_ID/hosscoinbot
+timeout: 900s
