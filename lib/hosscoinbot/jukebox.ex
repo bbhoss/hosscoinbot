@@ -63,6 +63,21 @@ defmodule Hosscoinbot.Jukebox do
     {:noreply, state}
   end
 
+  def handle_call(:skip_track, _from, state = %State{currently_playing: %URI{} = _current_track_uri}) do
+    Voice.stop(state.guild_id)
+    case play_next_track(state.guild_id, state.queue) do
+      {currently_playing, remaining_queue, player_monitor_ref} ->
+        {:reply, :ok, %State{ state | queue: remaining_queue, currently_playing: currently_playing, player_monitor_ref: player_monitor_ref}}
+      {:not_playing, remaining_queue} ->
+        {:reply, :ok, %State{ state | queue: remaining_queue, currently_playing: :not_playing, player_monitor_ref: nil}}
+    end
+  end
+
+  def handle_call(:skip_track, _from, state = %State{currently_playing: :not_playing}) do
+    {:reply, :not_playing, state}
+  end
+
+
   def handle_info({:DOWN, monitor_ref, :process, _player_pid, :stop}, state) when state.player_monitor_ref == monitor_ref do
     Logger.debug("Player exited cleanly, playing next track if one exists")
     case play_next_track(state.guild_id, state.queue) do
@@ -92,6 +107,10 @@ defmodule Hosscoinbot.Jukebox do
 
   def ensure_bot_in_proper_voice_channel(guild_id, interaction_user_id) do
     GenServer.call(guild_jukebox(guild_id), {:ensure_bot_in_proper_voice_channel, interaction_user_id})
+  end
+
+  def skip_track(guild_id) do
+    GenServer.call(guild_jukebox(guild_id), :skip_track)
   end
 
   defp wait_for_voice_ready(_guild_id, _ready = true), do: :ready
