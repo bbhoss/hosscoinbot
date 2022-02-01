@@ -31,8 +31,7 @@ defmodule Hosscoinbot.SlashCommands.Transfer do
       %{name: "amount", type: 4, value: amount}
     ]
   }}) do
-    receiver_id_a = String.to_existing_atom(receiver_id)
-    receiver = interaction.data.resolved.users[receiver_id_a]
+    receiver = interaction.data.resolved.users[receiver_id]
     user = interaction.member.user
     response = case Operations.transfer(user.id, receiver.id, amount) do
       {:ok, txn} -> success_response(user, receiver, txn)

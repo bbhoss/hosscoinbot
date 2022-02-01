@@ -1,7 +1,7 @@
 defmodule Hosscoinbot.SlashCommands.Play do
   use Hosscoinbot.SlashCommands.SlashCommand
   alias Nostrum.Struct.Interaction
-  alias Nostrum.Api
+  alias Nostrum.{Api, Voice}
   alias Hosscoinbot.Jukebox
 
   def command() do
@@ -24,6 +24,10 @@ defmodule Hosscoinbot.SlashCommands.Play do
     options: [%{name: "url", type: 3, value: track_url}],
   }, guild_id: guild_id }) do
     {:ok, _pid} = Jukebox.ensure_started(guild_id)
+    interaction_user_id = interaction.member.user.id
+    if !Voice.playing?(guild_id) do
+      :ok = Jukebox.ensure_bot_in_proper_voice_channel(guild_id, interaction_user_id)
+    end
 
     response = case Jukebox.add_track(guild_id, track_url) do
       {:ok, playing_or_queued} -> ok_response(track_url, playing_or_queued)

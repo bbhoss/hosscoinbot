@@ -24,8 +24,7 @@ defmodule Hosscoinbot.SlashCommands.Log do
   def handle(interaction = %Interaction{data: %{
     options: [%{name: "user", type: 6, value: user_id}]
   }}) do
-    user_id_a = String.to_existing_atom(user_id)
-    user = interaction.data.resolved.users[user_id_a]
+    user = interaction.data.resolved.users[user_id]
     txns = Operations.user_transactions(user.id)
 
     Api.create_interaction_response(interaction, response(user, txns))

@@ -5,8 +5,7 @@ config :nostrum,
   num_shards: :auto
 
 config :hosscoinbot,
-  ecto_repos: [Hosscoinbot.Repo],
-  play_channel_id: "fill this in with the channel number"
+  ecto_repos: [Hosscoinbot.Repo]
 
 config :hosscoinbot, Hosscoinbot.Repo,
   database: "db/db.sqlite3"

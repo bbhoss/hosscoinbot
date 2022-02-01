@@ -23,8 +23,7 @@ defmodule Hosscoinbot.SlashCommands.Balance do
   def handle(interaction = %Interaction{data: %{
     options: [%{name: "user", type: 6, value: user_id}]
   }}) do
-    user_id_a = String.to_existing_atom(user_id)
-    user = interaction.data.resolved.users[user_id_a]
+    user = interaction.data.resolved.users[user_id]
     balance = Operations.balance(user.id)
 
     Api.create_interaction_response(interaction, response(user, balance))

@@ -2,6 +2,7 @@ defmodule Hosscoinbot.Jukebox do
   require Logger
   use GenServer
   alias Nostrum.Voice
+  alias Nostrum.Cache.GuildCache
 
   defmodule State do
     defstruct queue: :queue.new(), guild_id: nil, currently_playing: :not_playing, player_monitor_ref: nil
@@ -24,9 +25,6 @@ defmodule Hosscoinbot.Jukebox do
   end
 
   def init(guild_id) do
-    channel = Application.fetch_env!(:hosscoinbot, :play_channel_id)
-    :ok = Voice.join_channel(guild_id, channel)
-    :timer.sleep(2000) # Sleep for async join
     case Registry.register(registry_name(), registry_key(guild_id), __MODULE__) do
       {:ok, _pid} -> {:ok, %State{guild_id: guild_id}}
       {:error, {:already_registered, _pid}} -> :ignore # Already running
@@ -50,6 +48,19 @@ defmodule Hosscoinbot.Jukebox do
   def handle_call(:clear, _from, state) do
     ensure_stopped_playing(state.guild_id)
     {:reply, :ok, %State{guild_id: state.guild_id}}
+  end
+
+  def handle_call({:ensure_bot_in_proper_voice_channel, interaction_user_id}, from, state) do
+    guild = GuildCache.get!(state.guild_id)
+    [channel_id] = for voice_state <- guild.voice_states, voice_state.user_id == interaction_user_id, do: voice_state.channel_id
+    :ok = Voice.join_channel(state.guild_id, channel_id)
+
+    Task.async(fn ->
+      wait_for_voice_ready(state.guild_id, false)
+      GenServer.reply(from, :ok)
+    end)
+
+    {:noreply, state}
   end
 
   def handle_info({:DOWN, monitor_ref, :process, _player_pid, :stop}, state) when state.player_monitor_ref == monitor_ref do
@@ -77,6 +88,17 @@ defmodule Hosscoinbot.Jukebox do
 
   def clear(guild_id) do
     GenServer.call(guild_jukebox(guild_id), :clear)
+  end
+
+  def ensure_bot_in_proper_voice_channel(guild_id, interaction_user_id) do
+    GenServer.call(guild_jukebox(guild_id), {:ensure_bot_in_proper_voice_channel, interaction_user_id})
+  end
+
+  defp wait_for_voice_ready(_guild_id, _ready = true), do: :ready
+  defp wait_for_voice_ready(guild_id, _ready) do
+    Logger.debug("Waiting for voice to be ready")
+    :timer.sleep(250)
+    wait_for_voice_ready(guild_id, Voice.ready?(guild_id))
   end
 
   defp ensure_stopped_playing(guild_id) do
