@@ -29,7 +29,7 @@ steps:
   - name: nix-store
     path: /nix/
 - name: gcr.io/cloud-builders/docker
-  args: ['tag', 'hosscoinbot:$COMMIT_SHA', 'gcr.io/$PROJECT_ID/hosscoinbot:$COMMIT_SHA']
+  args: ['tag', 'hosscoinbot:$COMMIT_SHA', 'us-east4-docker.pkg.dev/$PROJECT_ID/hosscoinbot/hosscoinbot:$COMMIT_SHA']
 
 availableSecrets:
   secretManager:
@@ -37,5 +37,5 @@ availableSecrets:
     env: 'CACHIX_AUTH_TOKEN'
 
 images:
-- gcr.io/$PROJECT_ID/hosscoinbot
+- us-east4-docker.pkg.dev/$PROJECT_ID/hosscoinbot/hosscoinbot
 timeout: 900s
