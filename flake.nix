@@ -28,11 +28,12 @@
         mixFodDeps = erlPkgs.fetchMixDeps {
           pname = "mix-deps-${pname}";
           inherit src version;
-          sha256 = "2hrfG49grSJJStvSIRS/ZvIRyz2GfokObqsEz8Arg7Q=";
+          sha256 = "TuKrscgOtsjN7aBl65lGFTSPoM/5B9H/voSDdUTnBII=";
         };
         runtimeAppDeps = [
           locales
           pkgs.ffmpeg
+          pkgs.youtube-dl
         ];
         hosscoinbotRelease = erlPkgs.mixRelease {
           inherit src pname version mixFodDeps;
