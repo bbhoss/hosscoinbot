@@ -63,6 +63,7 @@
             Env = [
               "LC_ALL=en_US.UTF-8"
               "LOCALE_ARCHIVE=${locales}/lib/locale/locale-archive"
+              "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
             ];
           };
         };
