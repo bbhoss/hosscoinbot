@@ -24,7 +24,7 @@ defmodule Hosscoinbot.SlashCommands.Play do
     options: [%{name: "url", type: 3, value: track_url}],
   }, guild_id: guild_id }) do
     {:ok, _pid} = Jukebox.ensure_started(guild_id)
-    Api.create_interaction_response(interaction, loading_response())
+    {:ok} = Api.create_interaction_response(interaction, loading_response())
     interaction_user_id = interaction.member.user.id
     if !Voice.playing?(guild_id) do
       :ok = Jukebox.ensure_bot_in_proper_voice_channel(guild_id, interaction_user_id)
@@ -35,7 +35,7 @@ defmodule Hosscoinbot.SlashCommands.Play do
       {:error, msg} -> error_response(msg, track_url)
     end
 
-    Api.edit_interaction_response(interaction, response)
+    {:ok, _msg} = Api.edit_interaction_response(interaction, response)
   end
 
   defp ok_response(track_url, :playing) do
