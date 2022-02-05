@@ -69,7 +69,7 @@ defmodule Hosscoinbot.Jukebox do
       {currently_playing, remaining_queue, player_monitor_ref} ->
         {:reply, :ok, %State{ state | queue: remaining_queue, currently_playing: currently_playing, player_monitor_ref: player_monitor_ref}}
       {:not_playing, remaining_queue} ->
-        {:reply, :ok, %State{ state | queue: remaining_queue, currently_playing: :not_playing, player_monitor_ref: nil}}
+        {:reply, :ok, %State{ state | queue: remaining_queue, currently_playing: :not_playing, player_monitor_ref: nil}, :hibernate}
     end
   end
 
@@ -84,7 +84,7 @@ defmodule Hosscoinbot.Jukebox do
       {currently_playing, remaining_queue, player_monitor_ref} ->
         {:noreply, %State{ state | queue: remaining_queue, currently_playing: currently_playing, player_monitor_ref: player_monitor_ref}}
       {:not_playing, remaining_queue} ->
-        {:noreply, %State{ state | queue: remaining_queue, currently_playing: :not_playing, player_monitor_ref: nil}}
+        {:noreply, %State{ state | queue: remaining_queue, currently_playing: :not_playing, player_monitor_ref: nil}, :hibernate}
     end
   end
 
