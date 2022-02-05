@@ -20,6 +20,7 @@
         pname = "hosscoinbot";
         version = self.rev;
         src = ./.;
+        depsSha256 = "TuKrscgOtsjN7aBl65lGFTSPoM/5B9H/voSDdUTnBII=";
 
         elixir = erlPkgs.elixir;
         locales = pkgs.glibcLocales.override {
@@ -27,8 +28,9 @@
         };
         mixFodDeps = erlPkgs.fetchMixDeps {
           pname = "mix-deps-${pname}";
-          inherit src version;
-          sha256 = "TuKrscgOtsjN7aBl65lGFTSPoM/5B9H/voSDdUTnBII=";
+          version = builtins.hashString "sha256" depsSha256; # FIXME: use the real hash instead of a hash of the base64-encoded string
+          inherit src;
+          sha256 = depsSha256;
         };
         runtimeAppDeps = [
           locales
