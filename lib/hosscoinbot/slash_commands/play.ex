@@ -40,21 +40,21 @@ defmodule Hosscoinbot.SlashCommands.Play do
 
   defp ok_response(track_url, :playing) do
     %{
-      flags: 64, # Ephemeral
+      flags: 0,
       content: "Playing track: #{track_url}"
     }
   end
 
   defp ok_response(track_url, {:queued, queue_length}) do
     %{
-      flags: 64, # Ephemeral
+      flags: 0,
       content: "Added track: #{track_url} to the queue. #{queue_length} song(s) now in the queue"
     }
   end
 
   defp error_response(msg, track_url) do
     %{
-      flags: 64, # Ephemeral
+      flags: 0,
       content: "Error #{msg} when playing track: #{track_url}"
     }
   end
@@ -62,6 +62,7 @@ defmodule Hosscoinbot.SlashCommands.Play do
   defp loading_response() do
     %{
       type: 5,
+      data: %{flags: 128}
     }
   end
 end
