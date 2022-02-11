@@ -1,7 +1,6 @@
 defmodule Hosscoinbot.SlashCommands.Log do
   use Hosscoinbot.SlashCommands.SlashCommand
   alias Nostrum.Struct.Interaction
-  alias Nostrum.Api
   alias Hosscoinbot.Operations
   alias Hosscoinbot.Model.Transaction
 
@@ -27,14 +26,14 @@ defmodule Hosscoinbot.SlashCommands.Log do
     user = interaction.data.resolved.users[user_id]
     txns = Operations.user_transactions(user.id)
 
-    Api.create_interaction_response(interaction, response(user, txns))
+    response(user, txns)
   end
 
   def handle(interaction = %Interaction{}) do
     user = interaction.member.user
     txns = Operations.user_transactions(user.id)
 
-    Api.create_interaction_response(interaction, response(user, txns))
+    response(user, txns)
   end
 
   defp response(user, txns) do
@@ -46,11 +45,8 @@ defmodule Hosscoinbot.SlashCommands.Log do
       |> Enum.join("\n")
 
     %{
-      type: 4,
       flags: 64, # Ephemeral
-      data: %{
-        content: "#{user.username}'s Transactions:\n#{logs_message}"
-      }
+      content: "#{user.username}'s Transactions:\n#{logs_message}"
     }
   end
 end

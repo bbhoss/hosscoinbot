@@ -5,7 +5,7 @@ defmodule Hosscoinbot.Operations do
   alias Hosscoinbot.{Repo, SlashCommands}
   alias Hosscoinbot.Model.{Minting, Transaction}
 
-  @spec mint_coins(Integer.t, Integer.t) :: {:ok, Minting.t} | {:error, String.t}
+  @spec mint_coins(integer(), integer()) :: {:ok, Minting.t} | {:error, String.t}
   def mint_coins(user_id, amount) do
     multi_op = Multi.new()
       |> Multi.insert(:minting, %Minting{minter: user_id, amount: amount})
@@ -21,14 +21,14 @@ defmodule Hosscoinbot.Operations do
     end
   end
 
-  @spec balance(Integer.t) :: Integer.t
+  @spec balance(integer()) :: integer()
   def balance(user_id) do
     sent_to_user = from t in Transaction, where: t.to_id == ^user_id, select: sum(t.amount)
     sent_from_user = from t in Transaction, where: t.from_id == ^user_id, select: sum(t.amount)
     (Repo.one(sent_to_user) || 0) - (Repo.one(sent_from_user) || 0)
   end
 
-  @spec transfer(Integer.t, Integer.t, Integer.t) :: {:ok, Transaction.t} | {:error, String.t}
+  @spec transfer(integer(), integer(), integer()) :: {:ok, Transaction.t} | {:error, String.t}
   def transfer(from_user_id, to_user_id, amount) do
     current_balance = balance(from_user_id)
 
@@ -45,12 +45,12 @@ defmodule Hosscoinbot.Operations do
     end
   end
 
-  @spec user_transactions(Integer.t) :: [Transaction.t]
+  @spec user_transactions(integer()) :: [Transaction.t]
   def user_transactions(user_id) do
     Repo.all(from t in Transaction, where: t.to_id == ^user_id or t.from_id == ^user_id)
   end
 
-  @spec hoarders(non_neg_integer()) :: [{Integer.t, Integer.t}]
+  @spec hoarders(non_neg_integer()) :: [{integer(), integer()}]
   def hoarders(limit) do
     receives = from t in Transaction, select: %{user_id: t.to_id, amount: t.amount}
     absolute_txns = from t in Transaction, select: %{user_id: t.from_id, amount: -1*t.amount}, union_all: ^receives
@@ -63,7 +63,7 @@ defmodule Hosscoinbot.Operations do
     Repo.all(totals)
   end
 
-  @spec install_slash_commands(Integer.t) :: :ok | {:error, String.t}
+  @spec install_slash_commands(integer()) :: :ok | {:error, String.t}
   def install_slash_commands(guild_id) do
     installs = for cmd <- SlashCommands.all_commands(), do: SlashCommands.install(guild_id, cmd)
     failures = Enum.filter(installs, &(elem(&1, 0) == :error))

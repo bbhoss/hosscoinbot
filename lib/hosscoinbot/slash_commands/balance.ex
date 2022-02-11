@@ -1,7 +1,6 @@
 defmodule Hosscoinbot.SlashCommands.Balance do
   use Hosscoinbot.SlashCommands.SlashCommand
   alias Nostrum.Struct.Interaction
-  alias Nostrum.Api
   alias Hosscoinbot.Operations
 
   def command() do
@@ -26,7 +25,7 @@ defmodule Hosscoinbot.SlashCommands.Balance do
     user = interaction.data.resolved.users[user_id]
     balance = Operations.balance(user.id)
 
-    Api.create_interaction_response(interaction, response(user, balance))
+    response(user, balance)
   end
 
   def handle(interaction = %Interaction{}) do
@@ -34,16 +33,13 @@ defmodule Hosscoinbot.SlashCommands.Balance do
     balance = Operations.balance(user.id)
 
 
-    Api.create_interaction_response(interaction, response(user, balance))
+    response(user, balance)
   end
 
   defp response(user, balance) do
     %{
-      type: 4,
       flags: 64, # Ephemeral
-      data: %{
-        content: "#{user.username}'s Balance: #{balance}"
-      }
+      content: "#{user.username}'s Balance: #{balance}"
     }
   end
 end

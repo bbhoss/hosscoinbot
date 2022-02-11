@@ -25,9 +25,18 @@ defmodule Hosscoinbot.TreasuryConsumer do
     Consumer.start_link(__MODULE__)
   end
 
+  defp loading_response() do
+    %{
+      type: 5,
+      data: %{flags: 128}
+    }
+  end
+
   def handle_event({:INTERACTION_CREATE, %Interaction{} = interaction, _ws_state}) do
     Logger.debug("Interaction created event:\n#{inspect(interaction)}")
-    SlashCommands.handle_interaction(interaction)
+    {:ok} = Api.create_interaction_response(interaction, loading_response())
+    response = SlashCommands.handle_interaction(interaction)
+    {:ok, _msg} = Api.edit_interaction_response(interaction, response)
   end
 
   def handle_event({:MESSAGE_CREATE, msg, _ws_state}) do

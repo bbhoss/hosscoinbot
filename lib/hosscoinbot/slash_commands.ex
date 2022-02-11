@@ -6,6 +6,7 @@ defmodule Hosscoinbot.SlashCommands do
   }
 
   defmodule SlashCommand do
+    @type response() :: %{content: String.t(), flags: non_neg_integer()}
     defmacro __using__(_opts) do
       quote do
         @behaviour Hosscoinbot.SlashCommands.SlashCommand
@@ -19,7 +20,7 @@ defmodule Hosscoinbot.SlashCommands do
     end
     @callback init(Guild) :: any
     @callback command() :: map()
-    @callback handle(Interaction.t) :: any
+    @callback handle(Interaction.t) :: response()
   end
 
   @commands [

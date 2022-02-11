@@ -1,7 +1,6 @@
 defmodule Hosscoinbot.SlashCommands.Mint do
   use Hosscoinbot.SlashCommands.SlashCommand
   alias Nostrum.Struct.Interaction
-  alias Nostrum.Api
   alias Hosscoinbot.Operations
 
   @allowed_minters [
@@ -30,13 +29,11 @@ defmodule Hosscoinbot.SlashCommands.Mint do
     user = interaction.member.user
 
 
-    response = case mint_op(user.id, amount) do
+    case mint_op(user.id, amount) do
       :unauthorized -> unauthorized_response()
       {:ok, minting} -> success_response(user, minting)
       {:error, msg} -> error_response(msg)
     end
-
-    Api.create_interaction_response(interaction, response)
   end
 
   defp mint_op(user_id, amount) when user_id in @allowed_minters, do: Operations.mint_coins(user_id, amount)
@@ -44,31 +41,22 @@ defmodule Hosscoinbot.SlashCommands.Mint do
 
   defp success_response(user, minting) do
     %{
-      type: 4,
       flags: 64, # Ephemeral
-      data: %{
-        content: "#{user.username} minted #{minting.amount} new $HOSS coins"
-      }
+      content: "#{user.username} minted #{minting.amount} new $HOSS coins"
     }
   end
 
   defp error_response(msg) do
     %{
-      type: 4,
       flags: 64, # Ephemeral
-      data: %{
-        content: "Error minting coins: #{msg}"
-      }
+      content: "Error minting coins: #{msg}"
     }
   end
 
   defp unauthorized_response() do
     %{
-      type: 4,
       flags: 64, # Ephemeral
-      data: %{
-        content: "Unauthorized minting detected, guards!"
-      }
+      content: "Unauthorized minting detected, guards!"
     }
   end
 end
