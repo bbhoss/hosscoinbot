@@ -3,6 +3,7 @@ defmodule Hosscoinbot.SlashCommands do
   alias Nostrum.Struct.{
     Interaction,
     Guild,
+    ApplicationCommandInteractionData
   }
 
   defmodule SlashCommand do
@@ -15,12 +16,18 @@ defmodule Hosscoinbot.SlashCommands do
           :noop
         end
 
-        defoverridable init: 1
+        def message_component_ids, do: []
+
+        defoverridable init: 1, message_component_ids: 0
       end
     end
     @callback init(Guild) :: any
     @callback command() :: map()
+    @callback message_component_ids() :: [String.t()]
     @callback handle(Interaction.t) :: response()
+    @callback handle_component(String.t, Interaction.t) :: response()
+
+    @optional_callbacks handle_component: 2
   end
 
   @commands [
@@ -46,8 +53,14 @@ defmodule Hosscoinbot.SlashCommands do
   end
 
   for {command_mod, interaction_name} <- @all_commands_with_names do
-    def handle_interaction(interaction = %Interaction{data: %{name: unquote(interaction_name) }}) do
+    def handle_interaction(interaction = %Interaction{type: 2, data: %{name: unquote(interaction_name) }}) do
       unquote(command_mod).handle(interaction)
+    end
+
+    for message_component_id <- command_mod.message_component_ids do
+      def handle_interaction(interaction = %Interaction{type: 3, data: %ApplicationCommandInteractionData{custom_id: unquote(message_component_id) }}) do
+        unquote(command_mod).handle_component(interaction.data.custom_id, interaction)
+      end
     end
   end
 

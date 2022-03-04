@@ -20,12 +20,24 @@ defmodule Hosscoinbot.SlashCommands.Play do
     }
   end
 
+  def message_component_ids(), do: ["replay"]
+
   def handle(interaction = %Interaction{data: %{
     options: [%{name: "url", type: 3, value: track_url}],
   }, guild_id: guild_id }) do
+    play_url(guild_id, interaction_user_id(interaction), track_url)
+  end
+
+
+
+  def handle_component("replay", interaction) do
+    "Playing track: " <> track_url = interaction.message.content
+    play_url(interaction.guild_id, interaction_user_id(interaction), track_url)
+  end
+
+  defp play_url(guild_id, interaction_user_id, track_url) do
     {:ok, _pid} = Jukebox.ensure_started(guild_id)
 
-    interaction_user_id = interaction.member.user.id
     if !Voice.playing?(guild_id) do
       :ok = Jukebox.ensure_bot_in_proper_voice_channel(guild_id, interaction_user_id)
     end
@@ -36,17 +48,21 @@ defmodule Hosscoinbot.SlashCommands.Play do
     end
   end
 
+  defp interaction_user_id(interaction), do: interaction.member.user.id
+
   defp ok_response(track_url, :playing) do
     %{
       flags: 0,
-      content: "Playing track: #{track_url}"
+      content: "Playing track: #{track_url}",
+      components: ok_components()
     }
   end
 
   defp ok_response(track_url, {:queued, queue_length}) do
     %{
       flags: 0,
-      content: "Added track: #{track_url} to the queue. #{queue_length} song(s) now in the queue"
+      content: "Added track: #{track_url} to the queue. #{queue_length} song(s) now in the queue",
+      components: ok_components()
     }
   end
 
@@ -55,5 +71,21 @@ defmodule Hosscoinbot.SlashCommands.Play do
       flags: 0,
       content: "Error #{msg} when playing track: #{track_url}"
     }
+  end
+
+  defp ok_components do
+    [
+      %{
+        type: 1,
+        components: [
+          %{
+              type: 2,
+              label: "Replay",
+              style: 1,
+              custom_id: "replay"
+          }
+        ]
+      }
+    ]
   end
 end
