@@ -20,7 +20,7 @@ defmodule Hosscoinbot.SlashCommands.Play do
     }
   end
 
-  def message_component_ids(), do: ["replay"]
+  def message_component_ids(), do: ["replay", "mint_nft"]
 
   def handle(interaction = %Interaction{data: %{
     options: [%{name: "url", type: 3, value: track_url}],
@@ -30,6 +30,10 @@ defmodule Hosscoinbot.SlashCommands.Play do
 
   def handle_component("replay", interaction) do
     play_url(interaction.guild_id, interaction_user_id(interaction), extract_url(interaction))
+  end
+
+  def handle_component("mint_nft", _interaction) do
+    dummy_response()
   end
 
   defp play_url(guild_id, interaction_user_id, track_url) do
@@ -75,6 +79,13 @@ defmodule Hosscoinbot.SlashCommands.Play do
     }
   end
 
+  defp dummy_response() do
+    %{
+      flags: 0,
+      content: "Don't do that dummy"
+    }
+  end
+
   defp ok_components do
     [
       %{
@@ -85,6 +96,12 @@ defmodule Hosscoinbot.SlashCommands.Play do
               label: "Replay",
               style: 1,
               custom_id: "replay"
+          },
+          %{
+            type: 2,
+            label: "Mint NFT",
+            style: 2,
+            custom_id: "mint_nft"
           }
         ]
       }
