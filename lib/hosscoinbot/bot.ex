@@ -35,10 +35,9 @@ defmodule Hosscoinbot.TreasuryConsumer do
   def handle_event({:INTERACTION_CREATE, %Interaction{} = interaction, _ws_state}) do
     Logger.debug("Interaction created event:\n#{inspect(interaction)}")
     {:ok} = Api.create_interaction_response(interaction, loading_response())
-    response = SlashCommands.handle_interaction(interaction)
     case SlashCommands.handle_interaction(interaction) do
       :ignore -> {:ok, :ignore}
-      _else ->
+      response ->
         {:ok, _msg} = Api.edit_interaction_response(interaction, response)
     end
   end
