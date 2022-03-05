@@ -28,11 +28,8 @@ defmodule Hosscoinbot.SlashCommands.Play do
     play_url(guild_id, interaction_user_id(interaction), track_url)
   end
 
-
-
   def handle_component("replay", interaction) do
-    "Playing track: " <> track_url = interaction.message.content
-    play_url(interaction.guild_id, interaction_user_id(interaction), track_url)
+    play_url(interaction.guild_id, interaction_user_id(interaction), extract_url(interaction))
   end
 
   defp play_url(guild_id, interaction_user_id, track_url) do
@@ -48,6 +45,11 @@ defmodule Hosscoinbot.SlashCommands.Play do
     end
   end
 
+  defp extract_url(interaction) do
+    [_, url] = Regex.run(~r/^Playing track: (http.+)$/m, interaction.message.content)
+    url
+  end
+
   defp interaction_user_id(interaction), do: interaction.member.user.id
 
   defp ok_response(track_url, :playing) do
@@ -61,7 +63,7 @@ defmodule Hosscoinbot.SlashCommands.Play do
   defp ok_response(track_url, {:queued, queue_length}) do
     %{
       flags: 0,
-      content: "Added track: #{track_url} to the queue. #{queue_length} song(s) now in the queue",
+      content: "Playing track: #{track_url}\n\n#{queue_length} song(s) now in the queue",
       components: ok_components()
     }
   end
