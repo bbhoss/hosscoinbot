@@ -77,6 +77,13 @@ defmodule Hosscoinbot.Jukebox do
     {:reply, :not_playing, state}
   end
 
+  def handle_call(:now_playing, _from, state = %State{currently_playing: :not_playing}) do
+    {:reply, :not_playing, state}
+  end
+
+  def handle_call(:now_playing, _from, state = %State{currently_playing: currently_playing_uri}) do
+    {:reply, currently_playing_uri, state}
+  end
 
   def handle_info({:DOWN, monitor_ref, :process, _player_pid, :stop}, state) when state.player_monitor_ref == monitor_ref do
     Logger.debug("Player exited cleanly, playing next track if one exists")
@@ -111,6 +118,10 @@ defmodule Hosscoinbot.Jukebox do
 
   def skip_track(guild_id) do
     GenServer.call(guild_jukebox(guild_id), :skip_track)
+  end
+
+  def now_playing(guild_id) do
+    GenServer.call(guild_jukebox(guild_id), :now_playing)
   end
 
   defp wait_for_voice_ready(_guild_id, _ready = true), do: :ready

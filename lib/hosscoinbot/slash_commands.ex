@@ -38,6 +38,7 @@ defmodule Hosscoinbot.SlashCommands do
     Hosscoinbot.SlashCommands.Hoarders,
     Hosscoinbot.SlashCommands.Play,
     Hosscoinbot.SlashCommands.Skip,
+    Hosscoinbot.SlashCommands.NowPlaying,
   ]
   @all_commands_with_names Enum.map(@commands, &({&1, &1.command[:name]}))
 
