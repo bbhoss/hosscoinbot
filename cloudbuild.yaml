@@ -1,6 +1,6 @@
 steps:
 - id: "Build Container Image"
-  name: nixos/nix
+  name: nixos/nix:2.6.1
   entrypoint: bash
   secretEnv: ['CACHIX_AUTH_TOKEN']
   args:
