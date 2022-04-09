@@ -5,7 +5,7 @@ defmodule Hosscoinbot.Jukebox do
   alias Nostrum.Cache.GuildCache
 
   defmodule State do
-    defstruct queue: :queue.new(), guild_id: nil, currently_playing: :not_playing, player_monitor_ref: nil
+    defstruct queue: :queue.new(), guild_id: nil, currently_playing: :not_playing, player_monitor_ref: nil, play_retries_remaining: 3
   end
 
   def ensure_started(guild_id) do
@@ -33,7 +33,7 @@ defmodule Hosscoinbot.Jukebox do
 
   def handle_call({:add_track, track_uri}, _from, state = %State{currently_playing: :not_playing}) do
     {:ok, player_monitor_ref} = play_track(state.guild_id, track_uri) # TODO: Intelligently handle errors playing without blowing up the server
-    {:reply, {:ok, :playing}, %State{ state | currently_playing: URI.new!(track_uri), player_monitor_ref: player_monitor_ref }}
+    {:reply, {:ok, :playing}, %State{ state | currently_playing: track_uri, player_monitor_ref: player_monitor_ref }}
   end
 
   def handle_call({:add_track, track_uri}, _from, state = %State{currently_playing: %URI{} = _current_track_uri}) do
@@ -64,13 +64,9 @@ defmodule Hosscoinbot.Jukebox do
   end
 
   def handle_call(:skip_track, _from, state = %State{currently_playing: %URI{} = _current_track_uri}) do
-    Voice.stop(state.guild_id)
-    case play_next_track(state.guild_id, state.queue) do
-      {currently_playing, remaining_queue, player_monitor_ref} ->
-        {:reply, :ok, %State{ state | queue: remaining_queue, currently_playing: currently_playing, player_monitor_ref: player_monitor_ref}}
-      {:not_playing, remaining_queue} ->
-        {:reply, :ok, %State{ state | queue: remaining_queue, currently_playing: :not_playing, player_monitor_ref: nil}, :hibernate}
-    end
+    {:ok, new_state} = do_skip_track(state)
+
+    {:reply, :ok, new_state}
   end
 
   def handle_call(:skip_track, _from, state = %State{currently_playing: :not_playing}) do
@@ -93,6 +89,31 @@ defmodule Hosscoinbot.Jukebox do
       {:not_playing, remaining_queue} ->
         {:noreply, %State{ state | queue: remaining_queue, currently_playing: :not_playing, player_monitor_ref: nil}, :hibernate}
     end
+  end
+
+  def handle_info({:ensure_track_playing, track_uri}, state) when state.currently_playing == track_uri and state.play_retries_remaining > 0 do
+    if Voice.playing?(state.guild_id) do
+      {:noreply, state}
+    else
+      new_play_retries_remaining = state.play_retries_remaining - 1
+      Logger.debug("Trying to play #{inspect(track_uri)} again, #{new_play_retries_remaining} retries remaining")
+      _dont_care = Process.demonitor(state.player_monitor_ref)
+      _dgaf = Voice.stop(state.guild_id)
+      {:ok, player_monitor_ref} = play_track(state.guild_id, track_uri)
+
+      {:noreply, %State{ state | player_monitor_ref: player_monitor_ref, play_retries_remaining: new_play_retries_remaining }}
+    end
+  end
+
+  def handle_info({:ensure_track_playing, track_uri}, state) when state.currently_playing == track_uri do
+    Logger.info("Skipped track #{inspect(track_uri)} after we ran out of retries")
+    {:ok, new_state} = do_skip_track(state)
+
+    {:noreply, new_state}
+  end
+
+  def handle_info({:ensure_track_playing, track_uri}, state) when state.currently_playing != track_uri do
+    {:noreply, state}
   end
 
   def handle_info(all, state) do
@@ -153,9 +174,24 @@ defmodule Hosscoinbot.Jukebox do
       :ok ->
         player_pid = current_player_pid(guild_id)
         player_monitor_ref = Process.monitor(player_pid)
+        ensure_starts_playing(track_uri)
         {:ok, player_monitor_ref}
       {:error, msg} -> {:error, msg}
     end
+  end
+
+  defp do_skip_track(state) do
+    _dgaf = Voice.stop(state.guild_id)
+    case play_next_track(state.guild_id, state.queue) do
+      {currently_playing, remaining_queue, player_monitor_ref} ->
+        {:ok, %State{ state | queue: remaining_queue, currently_playing: currently_playing, player_monitor_ref: player_monitor_ref}}
+      {:not_playing, remaining_queue} ->
+        {:ok, %State{ state | queue: remaining_queue, currently_playing: :not_playing, player_monitor_ref: nil}, :hibernate}
+    end
+  end
+
+  def ensure_starts_playing(track_uri) do
+    :timer.send_after(5000, {:ensure_track_playing, track_uri})
   end
 
   def current_player_pid(guild_id), do: Voice.get_voice(guild_id).player_pid
